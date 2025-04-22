@@ -4,6 +4,7 @@ import com.user.user.application.DTOS.UserDTO;
 import com.user.user.application.command.UserCreateCommand;
 import com.user.user.application.command.UserUpdateCommand;
 import com.user.user.application.port.in.IUserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class UserController {
     private final IUserService userService;
 
     @PostMapping
-    public ResponseEntity<UserDTO> create(@RequestBody UserCreateCommand user) {
+    public ResponseEntity<UserDTO> create(@Valid @RequestBody UserCreateCommand user) {
         return ResponseEntity.ok(userService.createUser(user));
     }
 
@@ -35,8 +36,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> update(@RequestBody UserUpdateCommand user) {
+    @PutMapping
+    public ResponseEntity<UserDTO> update(@Valid @RequestBody UserUpdateCommand user) {
         return ResponseEntity.ok(userService.updateUser(user));
     }
 

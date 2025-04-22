@@ -17,7 +17,19 @@ public class UserDTOMapper {
         return dto;
     }
 
-    public UserDTO ModelToDTOOptional(Optional<User> userOptional) {
+    public Optional<UserDTO> ModelToDTOOptional(User user) {
+        if (user == null) {
+            return Optional.empty();
+        }
+
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setPassword(user.getPassword());
+        return Optional.of(dto);
+    }
+
+    public UserDTO ModelOptionalToDTOOptional(Optional<User> userOptional) {
         if (userOptional.isEmpty()) {
             return null;
         }

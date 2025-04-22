@@ -6,6 +6,8 @@ import com.user.user.application.command.UserUpdateCommand;
 import com.user.user.application.mapper.UserCommandMapper;
 import com.user.user.application.mapper.UserDTOMapper;
 import com.user.user.application.port.in.IUserService;
+import com.user.user.domain.exceptions.ResourceNotFoundException;
+import com.user.user.domain.exceptions.UniqueConstraintException;
 import com.user.user.domain.model.User;
 import com.user.user.domain.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,18 +33,20 @@ public class UserServiceImpl implements IUserService {
 
         Optional<User> model = userRepository.findByUsername(user.getUsername());
         if(model.isPresent())
-            throw new IllegalArgumentException("Usuario con nombre: "+user.getUsername()+ " YA Existe");
+            throw new UniqueConstraintException("Usuario", "username", user.getUsername());
         User userCreate = commandMapper.CreateCommandToModel(user);
         if (userCreate.getPassword() != null && !userCreate.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(userCreate.getPassword()));
+            userCreate.setPassword(passwordEncoder.encode(userCreate.getPassword()));
         }
         return dtoMapper.ModelToDTO(userRepository.save(userCreate));
     }
 
     @Override
     public Optional<UserDTO> getUserById(UUID id) {
-        return userRepository.findById(id)
-                .map(dtoMapper::ModelToDTO);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
+        return dtoMapper.ModelToDTOOptional(user);
+
     }
 
     @Override
@@ -55,14 +59,14 @@ public class UserServiceImpl implements IUserService {
     @Override
     public UserDTO updateUser(UserUpdateCommand user) {
         User existingUser = userRepository.findById(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario con ID: " + user.getId() + " no existe"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario", user.getId()));
 
         Optional<User> model = userRepository.findByUsername(user.getUsername());
         if(model.isPresent() && !model.get().getId().equals(user.getId()))
-            throw new IllegalArgumentException("Usuario con nombre: "+user.getUsername()+ " YA Existe");
+            throw new UniqueConstraintException("Usuario", "username", user.getUsername());
         User userUpdate = commandMapper.UpdateCommandToModel(user);
         if (userUpdate.getPassword() != null && !userUpdate.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(userUpdate.getPassword()));
+            userUpdate.setPassword(passwordEncoder.encode(userUpdate.getPassword()));
         }
         return dtoMapper.ModelToDTO(userRepository.save(userUpdate));
     }
